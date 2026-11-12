@@ -71,7 +71,15 @@ python -m pip install pyinstaller
 python -m PyInstaller --noconfirm --onefile --console --name uestc-energy --collect-submodules uestc_energy main.py
 ```
 
-产物在 `dist/`。仓库自带 GitHub Actions（`.github/workflows/build.yml`），推送 `v*` 标签会在 Windows 与 Linux 上各构建一份并附到 Release。
+产物在 `dist/`。
+
+说明：单文件（`--onefile`）首次运行会把自己解压到临时目录，个别杀毒软件或受限环境会拦截这次解压（报 `failed to open target file`／`Permission denied`）。遇到时改用目录模式即可，功能完全一样：
+
+```bash
+python -m PyInstaller --noconfirm --onedir --console --name uestc-energy --collect-submodules uestc_energy main.py
+```
+
+仓库自带 GitHub Actions（`.github/workflows/build.yml`），推送 `v*` 标签会在 Windows 与 Linux 上各构建一份、重命名为 `uestc-energy-windows.exe` 与 `uestc-energy-linux` 并附到 Release。
 
 ## 配置项
 
