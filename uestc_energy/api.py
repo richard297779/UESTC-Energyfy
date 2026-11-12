@@ -70,11 +70,28 @@ def _once(session):
         raise SessionExpired("登录已过期")
     if int(body.get("e", 0)) != 0:
         raise QueryError("电费接口失败：" + str(body.get("m")))
-    data = _unwrap(body.get("d"))
+    raw_data = body.get("d")
+    data = _unwrap(raw_data)
     if not data:
+        if isinstance(raw_data, str):
+            message = raw_data.strip()
+            if message.startswith(("http://", "https://")):
+                return None, message
+            if message:
+                if "住宿信息不存在" in message:
+                    message += (
+                        "。请先登录“云中成电”首页，确认寝室电费卡片是否可见；"
+                        "若官网同样不显示，请向学校相关部门核对住宿绑定"
+                    )
+                raise QueryError(message)
         raise QueryError("无法解析电费响应")
     has_money = _pick(data, MONEY_KEYS)[1] is not None or _pick(data, KWH_KEYS)[1] is not None
-    return (data if has_money else None), data.get("url") or ""
+    if has_money:
+        return data, ""
+    signed = data.get("url") or ""
+    if signed:
+        return None, signed
+    raise QueryError("电费接口未返回余额字段")
 
 
 def query(session, seconds: float = 20.0) -> dict:
