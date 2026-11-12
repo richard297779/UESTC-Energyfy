@@ -43,10 +43,24 @@ jobs:
           --collect-submodules uestc_energy
           main.py
 
+      - name: Build folder bundle
+        run: >
+          python -m PyInstaller --noconfirm --onedir --console
+          --name uestc-energy
+          --collect-submodules uestc_energy
+          --distpath dist-onedir --workpath build-onedir --specpath build-onedir
+          main.py
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.dist }}
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-onedir
+          path: dist-onedir/uestc-energy
           if-no-files-found: error
 
   release:
@@ -59,12 +73,14 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - name: Rename artifacts
+      - name: Assemble release files
         run: |
           mkdir -p out
           mv artifacts/uestc-energy-windows/uestc-energy.exe out/uestc-energy-windows.exe
           mv artifacts/uestc-energy-linux/uestc-energy out/uestc-energy-linux
           chmod +x out/uestc-energy-linux
+          cd artifacts/uestc-energy-windows-onedir && zip -qr ../../out/uestc-energy-windows-onedir.zip . && cd ../..
+          cd artifacts/uestc-energy-linux-onedir && zip -qr ../../out/uestc-energy-linux-onedir.zip . && cd ../..
       - uses: softprops/action-gh-release@v2
         with:
           files: out/*
