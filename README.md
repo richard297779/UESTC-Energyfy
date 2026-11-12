@@ -29,7 +29,7 @@
 
 ## 三分钟上手
 
-1. 从 [Releases](https://github.com/richard297779/uestc-energy/releases) 下载对应平台的文件（Windows：`uestc-energy-windows.exe`；Linux：`uestc-energy-linux`），放到一个自己的文件夹里
+1. 从 [Releases](https://github.com/richard297779/UESTC-Energyfy/releases) 下载对应平台的文件（Windows：`uestc-energy-windows.exe`；Linux：`uestc-energy-linux`），放到一个自己的文件夹里
 2. 双击运行。第一次会在**同目录**生成 `config.json` 与 `state.json`，并弹出面板
 3. 面板里点「添加用户」，只填三项：备注名（随便写，如"宿舍 A-101"）、学号、密码 → 确定
 4. 点「添加渠道」，类型选 `serverchan`，标签保持 `serverchan`，把 Server酱 SendKey 粘进去 → 确定
