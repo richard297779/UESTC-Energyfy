@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.spec
+.venv/
+venv/
+config.json
+state.json
+*.log
+tmp/
+dl/
+pylib/
+.git*.txt
+# 本地调试脚本与抓包残留
+_*.py
+_*.txt
+_*.html
+_bundle.js
