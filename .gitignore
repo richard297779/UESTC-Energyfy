@@ -1,24 +1,49 @@
 __pycache__/
 *.py[cod]
-build/
-dist/
-dist-onedir/
-build-onedir/
-*.spec
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
+
+# Local runtime data and secrets
 config.json
+config.json.tmp
 state.json
+state.json.tmp
 *.log
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+
+# Build artifacts
+build/
+build-onedir/
+dist/
+dist-onedir/
+*.spec
 tmp/
 dl/
 pylib/
-.git*.txt
-# 本地调试脚本与抓包残留
-_*.py
-_*.txt
-_*.html
-_bundle.js
 wheels/
-_*.mjs
+
+# Local debugging traces
+/_*.py
+/_*.txt
+/_*.html
+/_*.mjs
+_bundle.js
 _probe_dir_root/
+.git*.txt
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
