@@ -17,3 +17,6 @@ _*.py
 _*.txt
 _*.html
 _bundle.js
+wheels/
+_*.mjs
+_probe_dir_root/
