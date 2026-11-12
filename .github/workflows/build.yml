@@ -16,9 +16,13 @@ jobs:
           - os: windows-latest
             artifact: uestc-energy-windows
             dist: dist/uestc-energy.exe
+            smoke_onefile: '.\dist\uestc-energy.exe version'
+            smoke_onedir: '.\dist-onedir\uestc-energy\uestc-energy.exe version'
           - os: ubuntu-latest
             artifact: uestc-energy-linux
             dist: dist/uestc-energy
+            smoke_onefile: './dist/uestc-energy version'
+            smoke_onedir: './dist-onedir/uestc-energy/uestc-energy version'
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -50,6 +54,12 @@ jobs:
           --collect-submodules uestc_energy
           --distpath dist-onedir --workpath build-onedir --specpath build-onedir
           main.py
+
+      - name: Smoke test executable
+        run: ${{ matrix.smoke_onefile }}
+
+      - name: Smoke test folder bundle
+        run: ${{ matrix.smoke_onedir }}
 
       - uses: actions/upload-artifact@v4
         with:

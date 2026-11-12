@@ -89,6 +89,7 @@ python main.py check        # 查一次（用已保存的会话）
 python main.py login        # 交互式登录，保存会话（需要时输入验证码）
 python main.py run          # 持续轮询，按配置的间隔
 python main.py notify       # 给所有启用渠道发一条自检消息
+python main.py version      # 查看程序版本
 ```
 
 打包后的可执行文件同样支持这些子命令，例如 `uestc-energy-linux run`。

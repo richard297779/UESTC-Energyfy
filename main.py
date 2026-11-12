@@ -56,6 +56,12 @@ def _hide_console() -> None:
 
 def main() -> int:
     argv = sys.argv[1:]
+    if argv and argv[0] in {"version", "--version", "-V"}:
+        from uestc_energy import __version__
+
+        print("uestc-energy " + __version__)
+        return 0
+
     if argv and argv[0] in {"check", "run", "login", "notify", "help", "-h", "--help"}:
         from uestc_energy.cli import main as cli_main
 
