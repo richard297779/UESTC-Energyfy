@@ -52,6 +52,10 @@ def main(argv: list) -> int:
             _log(str(channel.get("tag")) + "：" + ("成功" if ok else "失败 " + detail))
         return 0
 
+    if not [u for u in cfg.get("users") or [] if u.get("username")]:
+        _log("还没有配置任何用户。请直接双击程序打开图形面板填写学号与密码，或编辑 " + config.config_path())
+        return 1
+
     if command == "login":
         for user in _find(cfg, keys):
             _login(cfg, state, user)
