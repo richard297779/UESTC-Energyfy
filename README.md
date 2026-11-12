@@ -138,6 +138,7 @@ python -m PyInstaller --noconfirm --onedir --console --name uestc-energy --colle
 - 学校改版登录页或电费接口时，需要跟着改 `uestc_energy/auth.py` / `api.py`
 - 会话 Cookie 会过期；过期后程序自动重登，若那时要求短信，面板里会显示「需要短信认证」
 - `/site/bedroom` 偶尔返回一种「降级响应」（给一个带签名的代理地址），程序会自动重试并兼容该形态
+- 门户住宿数据偶尔短时缺失，程序会在单次检查中自动重试 90 秒；若学校首页也没有电费卡片，仍需等待学校侧数据恢复
 - 程序只做查询与提醒，不代充值
 
 ## 免责

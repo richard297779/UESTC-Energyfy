@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from uestc_energy import api
 
@@ -49,9 +50,33 @@ class ApiTests(unittest.TestCase):
             {"e": 0, "m": "操作成功", "d": "学生住宿信息不存在"},
         ])
 
-        with self.assertRaisesRegex(api.QueryError, "住宿绑定"):
+        with self.assertRaisesRegex(api.TransientQueryError, "住宿绑定"):
             api._once(session)
         self.assertEqual(session.requests, 1)
+
+    def test_retry_recovers_after_transient_business_error(self):
+        session = FakeSession([
+            {"e": 0, "m": "操作成功", "d": "学生住宿信息不存在"},
+            {"e": 0, "m": "操作成功", "d": {"fjh": "A-101", "syje": 9.5}},
+        ])
+
+        with patch("uestc_energy.api.time.sleep"):
+            result = api.query(session, seconds=1)
+
+        self.assertEqual(result["balance"], 9.5)
+        self.assertEqual(session.requests, 2)
+
+    def test_signed_proxy_is_fetched_immediately(self):
+        session = FakeSession([
+            {"e": 0, "m": "操作成功", "d": {"url": "https://example.test/query"}},
+            {"e": 0, "m": "操作成功", "d": {"fjh": "A-101", "syje": 8.5}},
+        ])
+
+        result = api.query(session, seconds=1)
+
+        self.assertEqual(result["balance"], 8.5)
+        self.assertEqual(result["source"], "proxy")
+        self.assertEqual(session.requests, 2)
 
     def test_direct_response_without_balance_fields(self):
         session = FakeSession([

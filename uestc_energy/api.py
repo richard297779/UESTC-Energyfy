@@ -18,6 +18,10 @@ class QueryError(Exception):
     """接口返回了失败或结构不认识。"""
 
 
+class TransientQueryError(QueryError):
+    """门户数据短时未同步，可在当前查询窗口内重试。"""
+
+
 def _numbers(obj, prefix="", out=None):
     out = [] if out is None else out
     if not isinstance(obj, dict):
@@ -59,6 +63,23 @@ def _unwrap(payload):
     return None
 
 
+def _business_message(payload) -> str:
+    if not isinstance(payload, str):
+        return ""
+    message = payload.strip()
+    if not message or message.startswith(("http://", "https://")):
+        return ""
+    if "{" in message and "}" in message:
+        return ""
+    if "住宿信息不存在" in message:
+        message += (
+            "。请先登录“云中成电”首页，确认寝室电费卡片是否可见；"
+            "若官网同样不显示，请向学校相关部门核对住宿绑定"
+        )
+        raise TransientQueryError(message)
+    return message
+
+
 def _once(session):
     """一次请求；返回 (data, signed_url)。余额字段可能缺席（服务端在两种形态间交替）。"""
     resp = session.get(BEDROOM_URL, headers=HEADERS, timeout=20)
@@ -77,13 +98,9 @@ def _once(session):
             message = raw_data.strip()
             if message.startswith(("http://", "https://")):
                 return None, message
-            if message:
-                if "住宿信息不存在" in message:
-                    message += (
-                        "。请先登录“云中成电”首页，确认寝室电费卡片是否可见；"
-                        "若官网同样不显示，请向学校相关部门核对住宿绑定"
-                    )
-                raise QueryError(message)
+            business_message = _business_message(raw_data)
+            if business_message:
+                raise QueryError(business_message)
         raise QueryError("无法解析电费响应")
     has_money = _pick(data, MONEY_KEYS)[1] is not None or _pick(data, KWH_KEYS)[1] is not None
     if has_money:
@@ -94,30 +111,53 @@ def _once(session):
     raise QueryError("电费接口未返回余额字段")
 
 
-def query(session, seconds: float = 20.0) -> dict:
+def query(session, seconds: float = 90.0) -> dict:
     """返回 {balance, kwh, room, meter, field, source}；会话失效抛 SessionExpired。
 
-    服务端在「直接给余额」与「降级给代理地址」两种形态之间随机交替（实测约 1/4 命中直接形态），
-    所以按时间窗反复重试，而不是固定次数。
+    服务端在「直接给余额」与「降级给代理地址」两种形态之间随机交替，住宿信息也可能短时缺失，
+    所以在时间窗内指数退避重试，而不是一次失败后等待下一轮监控。
     """
     data, signed, source = None, "", "direct"
+    transient_error = None
+    attempts = 0
+    retry_delay = 2.0
     deadline = time.time() + max(1.0, float(seconds))
     while time.time() < deadline:
-        data, signed = _once(session)
+        attempts += 1
+        try:
+            data, signed = _once(session)
+        except TransientQueryError as exc:
+            transient_error = exc
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                break
+            time.sleep(min(retry_delay, remaining))
+            retry_delay = min(retry_delay * 1.5, 15.0)
+            continue
         if data:
             break
-        time.sleep(1.0)
+        if signed:
+            break
     if not data and signed:
-        # 连续几次都是降级形态：退回签名代理地址再试一次
+        # 降级形态出现后立即走签名代理，不再空等到时间窗结束
         source = "proxy"
         try:
             inner = session.get(signed, headers=HEADERS, timeout=20).json()
         except Exception:
             inner = None
+        if isinstance(inner, dict) and "d" in inner and "e" in inner:
+            if int(inner.get("e", 0)) != 0:
+                raise QueryError("签名代理返回失败：" + str(inner.get("m")))
+            inner = inner.get("d")
+        business_message = _business_message(inner)
+        if business_message:
+            raise QueryError(business_message)
         data = _unwrap(inner) if inner is not None else None
         if not isinstance(data, dict) or _pick(data, MONEY_KEYS)[1] is None:
             data = None
     if not data:
+        if transient_error:
+            raise QueryError(str(transient_error) + "（本轮已重试 " + str(attempts) + " 次）")
         raise QueryError("电费接口连续返回降级响应，未能取到余额")
 
     if data.get("retcode") not in (None, 0, "0"):
