@@ -142,3 +142,7 @@ python -m PyInstaller --noconfirm --onedir --console --name uestc-energy --colle
 ## 免责
 
 仅用于查询自己的宿舍电费。请勿用于批量扫描或他人账号。
+
+## 许可证
+
+本项目采用 [MIT License](LICENSE) 开源。
