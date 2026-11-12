@@ -77,14 +77,19 @@ def _once(session):
     return (data if has_money else None), data.get("url") or ""
 
 
-def query(session, attempts: int = 3) -> dict:
-    """返回 {balance, kwh, room, meter, field, source}；会话失效抛 SessionExpired。"""
+def query(session, seconds: float = 20.0) -> dict:
+    """返回 {balance, kwh, room, meter, field, source}；会话失效抛 SessionExpired。
+
+    服务端在「直接给余额」与「降级给代理地址」两种形态之间随机交替（实测约 1/4 命中直接形态），
+    所以按时间窗反复重试，而不是固定次数。
+    """
     data, signed, source = None, "", "direct"
-    for attempt in range(attempts):
+    deadline = time.time() + max(1.0, float(seconds))
+    while time.time() < deadline:
         data, signed = _once(session)
         if data:
             break
-        time.sleep(0.5)
+        time.sleep(1.0)
     if not data and signed:
         # 连续几次都是降级形态：退回签名代理地址再试一次
         source = "proxy"
