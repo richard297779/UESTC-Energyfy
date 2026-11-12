@@ -115,7 +115,7 @@ python -m PyInstaller --noconfirm --onefile --console --name uestc-energy --coll
 python -m PyInstaller --noconfirm --onedir --console --name uestc-energy --collect-submodules uestc_energy main.py
 ```
 
-仓库自带 GitHub Actions（`.github/workflows/build.yml`），推送 `v*` 标签会在 Windows 与 Linux 上各构建一份、重命名为 `uestc-energy-windows.exe` 与 `uestc-energy-linux` 并附到 Release。
+仓库自带 GitHub Actions（`.github/workflows/build.yml`），推送 `v*` 标签会在 Windows 与 Linux 上各构建一份，并附到 Release。Release 说明会读取相邻版本标签之间的 Conventional Commit 消息，按新功能、问题修复、文档、构建与发布等类别自动生成。
 
 ## 配置项
 

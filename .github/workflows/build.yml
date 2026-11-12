@@ -70,6 +70,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -81,6 +84,10 @@ jobs:
           chmod +x out/uestc-energy-linux
           cd artifacts/uestc-energy-windows-onedir && zip -qr ../../out/uestc-energy-windows-onedir.zip . && cd ../..
           cd artifacts/uestc-energy-linux-onedir && zip -qr ../../out/uestc-energy-linux-onedir.zip . && cd ../..
+      - name: Generate release notes
+        run: python .github/scripts/generate_release_notes.py --tag "$GITHUB_REF_NAME" --output release-notes.md
       - uses: softprops/action-gh-release@v2
         with:
+          name: UESTC 电费监控 ${{ github.ref_name }}
+          body_path: release-notes.md
           files: out/*

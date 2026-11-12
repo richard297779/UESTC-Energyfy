@@ -27,6 +27,7 @@ build-onedir/
 dist/
 dist-onedir/
 *.spec
+release-notes.md
 tmp/
 dl/
 pylib/
